@@ -134,3 +134,6 @@ Thumbs.db
 *.log
 screenshots/
 assets/temp/
+
+# complete rule
+data/黑暗森林_游戏规则 copy.md
