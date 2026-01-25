@@ -4,7 +4,7 @@
 
 ## 项目信息
 
-- **项目名称**: 三体游戏 (Three Body Game)
+- **项目名称**: 三体游戏 - 代号：黑暗森林 (Three Body Game - Dark Forest Protocol)
 - **项目类型**: Python桌游模拟项目
 - **Python版本**: 3.13.0
 - **虚拟环境**: `.venv`
@@ -12,7 +12,7 @@
 
 ## 游戏背景
 
-游戏灵感来源于三体中的黑暗森林理论，宇宙就像是一片黑暗的森林，其中的每个文明都是一个带枪的猎人，为了生存，猎人们都必须时刻"隐藏自己，做好清理"。
+游戏灵感来源于三体中的黑暗森林理论：宇宙就像是一片黑暗的森林，其中的每个文明都是一个带枪的猎人，为了生存，猎人们都必须时刻"隐藏自己，做好清理"。
 
 ## 环境配置
 
@@ -70,7 +70,7 @@ pip install -r requirements.txt
 ## 项目结构
 
 ```
-three_body_game/
+DarkForestProtocol/
 ├── .git/                  # Git仓库目录
 ├── .venv/                 # Python虚拟环境
 ├── .vscode/               # VSCode配置
@@ -80,15 +80,16 @@ three_body_game/
 │   ├── building.py        # 建筑类定义
 │   ├── card.py            # 卡牌类定义
 │   ├── game.py            # 游戏核心逻辑
+│   ├── message.py         # 消息系统
 │   ├── planet.py          # 星球类定义
 │   ├── player.py          # 玩家类定义
 │   ├── setting.py         # 游戏设置和常量
 │   ├── 黑暗森林_游戏规则.md # 游戏规则文档
-│   └── 卡牌列表.json       # 卡牌数据配置
+│   └── __pycache__/       # Python缓存
 ├── image/                 # 游戏图片资源
 ├── log/                   # 日志文件目录
 ├── tmp/                   # 临时文件目录
-├── IFLOW.md               # 项目说明文档
+├── IFLOW.md               # 项目开发文档
 ├── LICENSE                # 许可证文件
 ├── main.py                # 主程序入口
 ├── README.md              # 项目说明
@@ -152,14 +153,45 @@ python main.py
 #### 游戏逻辑
 
 - **Game**: 游戏主控制器，管理游戏流程
+  - 管理玩家列表和存活玩家
+  - 控制游戏状态（preparation, start, middle, end）
+  - 管理回合制流程
+  - 处理卡牌抽取和分发
+  - 管理操作队列和消息系统
+
 - **Player**: 玩家类，管理玩家状态和手牌
+  - 管理玩家生命状态（live）
+  - 管理能量系统
+  - 管理手牌、建筑、攻击、广播
+  - 处理回合开始和游戏开始逻辑
+  - 支持自定义操作函数（通过function_ID）
+
 - **Planet**: 星球类，管理星球信息和建筑
+  - 管理星球所有者
+  - 计算防御等级
+  - 管理星球标签系统
+  - 处理恒星清除等特殊事件
+
 - **Building**: 建筑基类，定义建筑属性和效果
+  - 定义建筑防御等级
+  - 定义建筑标签系统
+  - 定义建筑效果和限制
 
 #### 数据结构
 
-- **Tags**: 游戏标签系统（NEED_SUN, ONLY_ONE等）
-- **卡牌列表.json**: 卡牌数据配置文件
+- **Tags**: 游戏标签系统
+  - 建筑标签：NEED_SUN, ONLY_ONE, NO_SUN, NO_BUILDING, NO_EXISTING, NO_REPLY, STILL_LIVE, NO_CARD
+  - 操作标签：ATTACK, ALLOW_ATTACK, REFUSE_ATTACK, BUILD, DESTROY, BROADCAST, RESPOND_BROADCAST, OPERATE, DISCARD, WIN, ADD_CARD
+- **Message**: 消息系统，用于玩家间通信和游戏事件通知
+  - 包含标签、玩家、结果等字段
+  - 用于广播操作和游戏状态变化
+
+#### 游戏常量
+
+- **CARDS_NUMBER**: 每回合摸牌数量（4张）
+- **ATTACK_EXISTENCE_ROUNDS**: 攻击存在回合数（1回合）
+- **BROADCAST_EXISTENCE_ROUNDS**: 广播存在回合数（3回合）
+- **ADD_ENERGY_ROUNDS**: 增加能量回合数（1回合）
 
 ### 日志系统
 
@@ -169,6 +201,29 @@ python main.py
 ```
 %(asctime)s.%(msecs)03d [%(levelname)s] [%(name)s:%(funcName)s] %(message)s
 ```
+
+主程序使用自定义的LowerLevelFormatter，将日志级别转换为小写。
+
+### 游戏流程
+
+1. **游戏初始化** (preparation)
+   - 创建游戏实例，传入玩家列表
+   - 初始化星球地图和卡牌组
+
+2. **游戏开始** (start)
+   - 随机分配玩家编号和星球
+   - 按编号排序玩家
+   - 调用每个玩家的start_game方法
+
+3. **游戏进行** (middle)
+   - 按回合进行游戏
+   - 每回合按玩家编号顺序执行
+   - 每个玩家执行start_round方法
+   - 检查游戏结束条件
+
+4. **游戏结束** (end)
+   - 检测获胜玩家
+   - 通知所有玩家游戏结果
 
 ## Git仓库
 
@@ -197,12 +252,14 @@ git commit -m "提交信息"
 - 遵循PEP 8代码规范
 - 使用类型提示（type hints）提高代码可读性
 - 建筑卡通过`building`属性绑定对应的Building类型
+- 使用Literal类型定义有限的状态集合
 
 ### 模块导入
 
 - 使用相对导入导入同级模块
 - 例如：`from .building import Building`
 - 例如：`from . import building`
+- 避免循环导入，在函数内部导入时使用延迟导入
 
 ### 注意事项
 
@@ -211,7 +268,40 @@ git commit -m "提交信息"
 - 定期提交代码到Git仓库
 - 修改卡牌或建筑类时，确保同步更新对应的绑定关系
 - 日志文件位于log目录，注意日志轮转和清理
+- Player类支持自定义操作函数，通过function_ID字典注册
+- 游戏状态管理使用Literal类型确保类型安全
 
 ## 游戏规则详情
 
 详细游戏规则请参考 `data/黑暗森林_游戏规则.md` 文件。
+
+## 扩展开发
+
+### 添加新卡牌
+
+1. 在`card.py`中定义新的卡牌类
+2. 在对应的模块（attack.py, building.py, broadcast.py）中实现卡牌效果
+3. 在`create_card_deck`函数中添加新卡牌到牌组
+
+### 添加新建筑
+
+1. 在`building.py`中定义新的建筑类
+2. 设置建筑的防御等级、标签和效果
+3. 创建对应的BuildingCard并绑定建筑实例
+
+### 添加自定义玩家逻辑
+
+1. 创建Player子类或使用function_ID注册自定义函数
+2. 重写start_game、start_round等方法
+3. 实现apply_attack、other_operation等回调函数
+
+## 常见问题
+
+### Q: 如何修改每回合摸牌数量？
+A: 修改`setting.py`中的`CARDS_NUMBER`常量。
+
+### Q: 如何修改游戏回合数？
+A: 修改`setting.py`中的`ATTACK_EXISTENCE_ROUNDS`、`BROADCAST_EXISTENCE_ROUNDS`等常量。
+
+### Q: 如何添加新玩家？
+A: 在`main.py`中修改创建Player实例的数量，传入Game构造函数。
