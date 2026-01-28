@@ -32,7 +32,9 @@ class Attack:
         if self.player.game is None:
             return False, [], "游戏未初始化"
         else:
-            self.player.game.add_operation(Message(Tags.ALLOW_ATTACK, self.player, (self,)))
+            self.player.game.add_operation(
+                Message(Tags.ALLOW_ATTACK, self.player, (self,))
+            )
 
         if Tags.NO_SUN in self.tags:
             ret = self.planet.clear_sun()

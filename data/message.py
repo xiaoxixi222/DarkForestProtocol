@@ -10,4 +10,3 @@ class Message:
     Tag: Tags | None = None
     player: Player | None = None
     result: tuple[Any, ...] = ()
-

@@ -19,7 +19,6 @@ class Broadcast:
         self.cost: int = 0
         self.effect: bool = False  # True:合作 False:伪装
         self.round: int = 0
-    
 
     def respond(self, broadcast: "Broadcast") -> str:
         if self.planet is None or self.player is None:
