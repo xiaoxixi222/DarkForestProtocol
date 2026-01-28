@@ -6,13 +6,14 @@ logger = logging.getLogger("game." + __name__)
 logger.setLevel(logging.DEBUG)
 
 
-function_ID: dict[int, dict[str, Callable]] = {}
+function_ID: dict[str, dict[str, Callable]] = {}
 """
 start_game: Callable[[Player], None]
 start_round: Callable[[Player], None]
 apply_attack: Callable[Attack], bool]
 other_operation: Callable[[Operation], None]
 """
+id_player: dict[str, "Player"] = {}
 
 
 class Player:
@@ -50,7 +51,7 @@ class Player:
         self.buildings: list[Building] = []
         self.attacks: list[Attack] = []
         self.broadcasts: list[Broadcast] = []
-        self.connect_ID: int = 0
+        self.connect_ID: str = ""
         self.memories: list[int] = []
 
     def start_game(self) -> None:
@@ -62,14 +63,22 @@ class Player:
         self.cards = []
         while len(self.cards) < CARDS_NUMBER:
             self.cards.append(self.game.get_free_card())
+        for id in function_ID:
+            if id_player.get(id, None) is None and self.connect_ID == "":
+                self.connect_ID = id
+                id_player[id] = self
+                break
         if self.connect_ID in function_ID:
             functions = function_ID[self.connect_ID]
         else:
             functions = {}
-        if functions.get("start", None) is not None and functions["start"] is not None:
-            functions["start"](self)
+        if (
+            functions.get("start_game", None) is not None
+            and functions["start_game"] is not None
+        ):
+            functions["start_game"](self)
         else:
-            logger.warning("玩家无start函数")
+            logger.warning("玩家无start_game函数")
 
     def build_building(self, cards_ID: int) -> tuple[bool, str]:
         if self.planet is None:
@@ -87,8 +96,6 @@ class Player:
                     return False, "该建筑只能建造一次"
         if self.energy <= card.cost:
             return False, "能量不足"
-        self.energy -= card.cost
-        self.cards.remove(card)
         new_building_type: type[Building] | None = card.building
         if new_building_type is None:
             return False, "建筑未知"
@@ -99,6 +106,8 @@ class Player:
         new_building = new_building_type()
         new_building.player = self
         self.buildings.append(new_building)
+        self.energy -= card.cost
+        self.cards.remove(card)
         if self.game is not None:
             self.game.add_operation(Message(Tags.BUILD, self, (new_building,)))
         else:
@@ -153,9 +162,7 @@ class Player:
             return False, "该卡牌不是攻击卡"
         if self.energy <= card.cost:
             return False, "能量不足"
-        self.energy -= card.cost
         attack_type: type[Attack] | None = card.attack
-        self.cards.remove(card)
         if attack_type is None:
             return False, "攻击未知"
         attack = attack_type()
@@ -164,6 +171,8 @@ class Player:
         attack.round = self.game.round
         self.attacks.append(attack)
         planet.attacks.append(attack)
+        self.energy -= card.cost
+        self.cards.remove(card)
         self.game.add_operation(Message(Tags.ATTACK, self, (attack,)))
         return True, "攻击成功"
 
@@ -186,9 +195,7 @@ class Player:
             return False, "该卡牌不是广播卡"
         if self.energy <= card.cost:
             return False, "能量不足"
-        self.energy -= card.cost
         broadcast_type: type[Broadcast] | None = card.broadcast
-        self.cards.remove(card)
         if broadcast_type is None:
             return False, "广播未知"
         if (
@@ -209,6 +216,8 @@ class Player:
         self.broadcasts.append(broadcast)
         planet.broadcasts.append(broadcast)
         broadcast.round = self.game.round
+        self.energy -= card.cost
+        self.cards.remove(card)
         self.game.add_operation(Message(Tags.BROADCAST, self, (broadcast,)))
         return True, "广播成功"
 
@@ -248,6 +257,11 @@ class Player:
 
         broadcast = broadcast_type()
 
+        if card.cost > self.energy:
+            return False, "能量不足"
+        self.energy -= card.cost
+        self.cards.remove(card)
+
         broadcast.player = self
         broadcast.planet = planet
         self.broadcasts.append(broadcast)
@@ -262,7 +276,9 @@ class Player:
         message = broadcast.respond(broadcast2)
         message2 = broadcast2.respond(broadcast)
         self.game.add_operation(
-            Message(Tags.RESPOND_BROADCAST, self, (message, message2))
+            Message(
+                Tags.RESPOND_BROADCAST, self, (broadcast, broadcast2, message, message2)
+            )
         )
         return True, message
 
@@ -345,6 +361,8 @@ class Player:
                         attack.refuse_attack()
 
     def other_operation(self, operation: "Message") -> None:
+        if operation.player == self:
+            return
         if self.connect_ID in function_ID:
             functions = function_ID[self.connect_ID]
         else:
@@ -353,3 +371,12 @@ class Player:
             functions["other_operation"](operation)
         else:
             logger.warning("玩家无other_operation函数")
+
+    def get_basic_info(self) -> dict:
+        if self.game is None or self.planet is None or self.number == 0:
+            assert False, "玩家属性未初始化"
+        return {
+            "player_count": self.game.count,
+            "player_id": self.number,
+            "planet_info": self.game.planet_map.map,
+        }

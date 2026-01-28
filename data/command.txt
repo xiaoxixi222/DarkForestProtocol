@@ -1,0 +1,11 @@
+指令：
+1.broadcast card_number(int) planet_number(int) 打出广播卡
+2.attack card_number(int) planet_number(int) 打出攻击卡
+3.build card_number(int) 打出建筑卡
+4.destroy building_number(int) 摧毁建筑
+5.respond_broadcast card_number(int) planet_number(int) 回应广播卡
+6.operation card_number(int) 打出功能卡
+7.discard card_number(int) 弃掉卡牌                     
+8.end_turn 结束回合
+9.clear 清空屏幕
+10.exit 退出游戏

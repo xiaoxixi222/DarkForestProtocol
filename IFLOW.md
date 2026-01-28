@@ -1,6 +1,6 @@
 # 项目概述
 
-这是一个基于《三体》小说改编的桌游《代号：黑暗森林》的Python实现项目。
+这是一个基于《三体》小说改编的桌游《代号：黑暗森林》的Python实现项目，支持单机和网络多人对战模式。
 
 ## 项目信息
 
@@ -9,6 +9,7 @@
 - **Python版本**: 3.13.0
 - **虚拟环境**: `.venv`
 - **许可证**: MIT License
+- **Git仓库**: https://github.com/xiaoxixi222/DarkForestProtocol.git
 
 ## 游戏背景
 
@@ -60,6 +61,10 @@ py -3.13 script.py
 - `pyyaml>=6.0` - 配置文件处理
 - `loguru>=0.7.0` - 日志处理
 - `typing-extensions>=4.8.0` - 类型检查扩展
+- `flask>=3.0.0` - Web框架（网络模式）
+- `flask-socketio>=5.3.0` - WebSocket支持（网络模式）
+- `python-socketio>=5.10.0` - Socket.IO客户端（网络模式）
+- `eventlet>=0.33.0` - 异步网络库（网络模式）
 
 ### 安装依赖
 
@@ -79,15 +84,29 @@ DarkForestProtocol/
 │   ├── broadcast.py       # 广播类定义
 │   ├── building.py        # 建筑类定义
 │   ├── card.py            # 卡牌类定义
+│   ├── client.py          # Socket.IO客户端（网络模式）
+│   ├── connect_manager.py # 连接管理器（网络模式）
 │   ├── game.py            # 游戏核心逻辑
 │   ├── message.py         # 消息系统
 │   ├── planet.py          # 星球类定义
 │   ├── player.py          # 玩家类定义
 │   ├── setting.py         # 游戏设置和常量
+│   ├── command.txt        # 命令配置
 │   ├── 黑暗森林_游戏规则.md # 游戏规则文档
+│   ├── 黑暗森林_游戏规则完整版.md # 完整游戏规则
 │   └── __pycache__/       # Python缓存
 ├── image/                 # 游戏图片资源
 ├── log/                   # 日志文件目录
+├── client1/               # 客户端1目录
+│   ├── log/               # 客户端1日志
+│   └── setting/           # 客户端1配置
+│       └── setting.json   # 客户端ID配置
+├── client2/               # 客户端2目录
+│   ├── log/               # 客户端2日志
+│   └── setting/           # 客户端2配置
+│       └── setting.json   # 客户端ID配置
+├── setting/               # 配置文件目录
+│   └── setting.json       # 默认客户端配置文件
 ├── tmp/                   # 临时文件目录
 ├── IFLOW.md               # 项目开发文档
 ├── LICENSE                # 许可证文件
@@ -101,9 +120,29 @@ DarkForestProtocol/
 
 ### 运行项目
 
+#### 方式一：使用 main.py 启动（推荐）
+
+运行主程序会同时启动服务器和游戏逻辑：
+
 ```powershell
 python main.py
 ```
+
+程序会提示输入玩家数量（2-4人），等待所有玩家连接后自动开始游戏。
+
+#### 方式二：分别启动服务器和客户端
+
+**启动服务器:**
+```powershell
+python -m data.connect_manager
+```
+
+**启动客户端:**
+```powershell
+python -m data.client
+```
+
+可以启动多个客户端实例进行测试，每个客户端会自动生成唯一的客户端ID。
 
 ### 游戏配置
 
@@ -177,6 +216,32 @@ python main.py
   - 定义建筑标签系统
   - 定义建筑效果和限制
 
+#### 网络通信模块
+
+- **ConnectManager**: 连接管理器（服务器端）
+  - 使用 Flask + Socket.IO 实现WebSocket通信
+  - 管理客户端连接和断开
+  - 处理玩家准备和消息转发
+  - 支持自定义玩家操作函数（Handler）
+
+- **Client**: Socket.IO客户端
+  - 自动生成和管理客户端ID
+  - 处理服务器消息和用户输入
+  - 支持连接、断开和错误处理
+
+- **Handler**: 客户端处理器
+  - 实现 start_game、start_round、apply_attack、other_operation 等方法
+  - 通过 output/input 与客户端交互
+
+#### 消息转换系统
+
+- **message_to_str**: 将 Message 对象转换为友好的中文描述
+  - 支持所有消息类型（ATTACK, BUILD, BROADCAST, DESTROY, RESPOND_BROADCAST, OPERATE, DISCARD, WIN, ALLOW_ATTACK）
+  - 自动计算并显示攻击距离（仅在 ALLOW_ATTACK 时）
+  - 显示星球编号和玩家信息
+
+- **str_to_message**: 将 JSON 字符串转换为 Message 对象
+
 #### 数据结构
 
 - **Tags**: 游戏标签系统
@@ -185,6 +250,7 @@ python main.py
 - **Message**: 消息系统，用于玩家间通信和游戏事件通知
   - 包含标签、玩家、结果等字段
   - 用于广播操作和游戏状态变化
+  - RESPOND_BROADCAST 格式: (broadcast1, broadcast2, message1, message2)
 
 #### 游戏常量
 
@@ -195,7 +261,11 @@ python main.py
 
 ### 日志系统
 
-项目使用Python标准logging模块，日志文件位于 `log/game.log`。
+项目使用Python标准logging模块，日志文件位于 `log/` 目录：
+
+- `game.log` - 游戏主日志
+- `flask.log` - Flask服务器日志
+- `client.log` - 客户端日志
 
 日志格式：
 ```
@@ -225,13 +295,39 @@ python main.py
    - 检测获胜玩家
    - 通知所有玩家游戏结果
 
+### 网络模式流程
+
+1. **服务器启动**
+   - 创建 ConnectManager 实例
+   - 启动 Flask + Socket.IO 服务器
+   - 等待客户端连接
+
+2. **客户端连接**
+   - 生成或读取客户端ID（存储在 setting.json）
+   - 连接到服务器
+   - 发送 prepare_connect 消息
+
+3. **游戏进行**
+   - 服务器通过 Handler 调用玩家方法
+   - Handler 通过 output/input 与客户端交互
+   - 消息通过 message_to_str 转换为友好格式显示
+
+4. **断开连接**
+   - 客户端主动断开或服务器断开
+   - 清理连接状态
+
 ## Git仓库
 
-项目已初始化Git仓库。
+项目已初始化Git仓库，远程仓库地址：https://github.com/xiaoxixi222/DarkForestProtocol.git
 
 **查看Git状态:**
 ```powershell
 git status
+```
+
+**查看远程仓库:**
+```powershell
+git remote -v
 ```
 
 **添加文件到暂存区:**
@@ -242,6 +338,11 @@ git add .
 **提交更改:**
 ```powershell
 git commit -m "提交信息"
+```
+
+**推送到远程仓库:**
+```powershell
+git push origin main
 ```
 
 ## 开发规范
@@ -270,6 +371,7 @@ git commit -m "提交信息"
 - 日志文件位于log目录，注意日志轮转和清理
 - Player类支持自定义操作函数，通过function_ID字典注册
 - 游戏状态管理使用Literal类型确保类型安全
+- 网络模式需要确保服务器和客户端使用相同的端口配置
 
 ## 游戏规则详情
 
@@ -295,6 +397,13 @@ git commit -m "提交信息"
 2. 重写start_game、start_round等方法
 3. 实现apply_attack、other_operation等回调函数
 
+### 扩展网络功能
+
+1. 在 `connect_manager.py` 中添加新的 Socket.IO 事件处理
+2. 在 `client.py` 中添加对应的客户端事件监听
+3. 在 `Handler` 类中实现新的操作方法
+4. 更新 `function_map` 映射关系
+
 ## 常见问题
 
 ### Q: 如何修改每回合摸牌数量？
@@ -305,3 +414,12 @@ A: 修改`setting.py`中的`ATTACK_EXISTENCE_ROUNDS`、`BROADCAST_EXISTENCE_ROUN
 
 ### Q: 如何添加新玩家？
 A: 在`main.py`中修改创建Player实例的数量，传入Game构造函数。
+
+### Q: 如何修改服务器端口？
+A: 在启动服务器时修改 `ConnectManager(host="localhost", port=9000)` 中的 port 参数。
+
+### Q: 客户端ID存储在哪里？
+A: 客户端ID存储在 `setting/setting.json` 文件中，首次运行时自动生成。
+
+### Q: 如何自定义消息显示格式？
+A: 修改 `connect_manager.py` 中的 `message_to_str` 函数。
