@@ -94,7 +94,7 @@ class Player:
             for building in self.buildings:
                 if isinstance(building, type(card)):
                     return False, "该建筑只能建造一次"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         new_building_type: type[Building] | None = card.building
         if new_building_type is None:
@@ -160,7 +160,7 @@ class Player:
         ][0]
         if not isinstance(card, AttackCard):
             return False, "该卡牌不是攻击卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         attack_type: type[Attack] | None = card.attack
         if attack_type is None:
@@ -193,7 +193,7 @@ class Player:
         ][0]
         if not isinstance(card, BroadcastCard):
             return False, "该卡牌不是广播卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         broadcast_type: type[Broadcast] | None = card.broadcast
         if broadcast_type is None:
@@ -290,7 +290,7 @@ class Player:
         card: Card = self.cards[Card_ID]
         if not isinstance(card, OperationCard):
             return False, "该卡牌不是操作卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         self.energy -= card.cost
         self.cards.remove(card)
