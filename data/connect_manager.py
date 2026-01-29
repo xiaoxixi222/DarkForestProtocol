@@ -91,6 +91,12 @@ class ConnectManager:
         def prepare_connect(sid, data):
             logger.info(f"收到 prepare_connect: {sid}, 数据: {data}")
             id = data["ID"]
+            # 检查客户端ID是否已经存在
+            if id in self.sid_ID_map.values():
+                logger.info(f"客户端ID已存在: {id}")
+                self.sio.emit("output", "该客户端已经启动", to=sid)
+                self.sio.emit("disconnect", to=sid)
+                return
             self.sid_ID_map[sid] = id
             self.preparing_count += 1
             if self.ID_handler_map.get(id, None) is not None:
