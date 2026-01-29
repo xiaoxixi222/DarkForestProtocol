@@ -291,7 +291,7 @@ class Handler:
                 self.output("输入错误，请重新输入")
 
     def apply_attack(self, attack: Attack):
-        self.output(f"攻击: {attack}是否允许?(y/n)")
+        self.output(f"攻击: {attack.name}是否允许?(y/n)")
         ret = self.input()
         if ret == "y":
             return True
