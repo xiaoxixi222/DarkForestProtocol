@@ -206,7 +206,7 @@ class Player:
         if (
             self.game.planet_map.map.get((self.planet.number, planet.number), -1)
             > card.broadcast_range
-            or card.broadcast_range != -1
+            and card.broadcast_range != -1
         ):
             return False, "广播距离超出范围"
         broadcast = broadcast_type()
@@ -251,7 +251,7 @@ class Player:
         if (
             self.game.planet_map.map.get((self.planet.number, planet.number), -1)
             > card.broadcast_range
-            or card.broadcast_range != -1
+            and card.broadcast_range != -1
         ):
             return False, "广播距离超出范围"
 
