@@ -94,7 +94,7 @@ class Player:
             for building in self.buildings:
                 if isinstance(building, type(card)):
                     return False, "该建筑只能建造一次"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         new_building_type: type[Building] | None = card.building
         if new_building_type is None:
@@ -160,7 +160,7 @@ class Player:
         ][0]
         if not isinstance(card, AttackCard):
             return False, "该卡牌不是攻击卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         attack_type: type[Attack] | None = card.attack
         if attack_type is None:
@@ -193,7 +193,7 @@ class Player:
         ][0]
         if not isinstance(card, BroadcastCard):
             return False, "该卡牌不是广播卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         broadcast_type: type[Broadcast] | None = card.broadcast
         if broadcast_type is None:
@@ -206,7 +206,7 @@ class Player:
         if (
             self.game.planet_map.map.get((self.planet.number, planet.number), -1)
             > card.broadcast_range
-            or card.broadcast_range != -1
+            and card.broadcast_range != -1
         ):
             return False, "广播距离超出范围"
         broadcast = broadcast_type()
@@ -251,7 +251,7 @@ class Player:
         if (
             self.game.planet_map.map.get((self.planet.number, planet.number), -1)
             > card.broadcast_range
-            or card.broadcast_range != -1
+            and card.broadcast_range != -1
         ):
             return False, "广播距离超出范围"
 
@@ -290,7 +290,7 @@ class Player:
         card: Card = self.cards[Card_ID]
         if not isinstance(card, OperationCard):
             return False, "该卡牌不是操作卡"
-        if self.energy <= card.cost:
+        if self.energy < card.cost:
             return False, "能量不足"
         self.energy -= card.cost
         self.cards.remove(card)
@@ -331,6 +331,9 @@ class Player:
         self.energy += ADD_ENERGY_ROUNDS
         for building in self.buildings:
             building.update()
+        # 补牌逻辑：每个回合开始时补CARDS_NUMBER张牌
+        while len(self.cards) < CARDS_NUMBER:
+            self.cards.append(self.game.get_free_card())
         self.apply_attacks(functions)
         if "start_round" in functions and functions["start_round"] is not None:
             functions["start_round"](self)
