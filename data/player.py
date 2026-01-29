@@ -331,6 +331,9 @@ class Player:
         self.energy += ADD_ENERGY_ROUNDS
         for building in self.buildings:
             building.update()
+        # 补牌逻辑：每个回合开始时补CARDS_NUMBER张牌
+        while len(self.cards) < CARDS_NUMBER:
+            self.cards.append(self.game.get_free_card())
         self.apply_attacks(functions)
         if "start_round" in functions and functions["start_round"] is not None:
             functions["start_round"](self)
