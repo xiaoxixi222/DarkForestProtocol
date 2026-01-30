@@ -372,7 +372,7 @@ class Player:
         planet.broadcasts.append(broadcast)
 
         broadcast2: Broadcast | None = (
-            self.planet.broadcasts[0] if len(self.planet.broadcasts) > 0 else None
+            planet.broadcasts[0] if len(planet.broadcasts) > 0 else None
         )
         logger.debug(f"broadcasts:{planet.broadcasts}")
         if broadcast2 is None:
