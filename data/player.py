@@ -125,6 +125,9 @@ class Player:
         if Tags.NEED_SUN in card.tags and Tags.NO_SUN in self.planet.tags:
             logger.warning(f"玩家{self.number}建造失败: 该星系无太阳能，无法建造该建筑")
             return False, "该星系无太阳能，无法建造该建筑"
+        if Tags.NO_EXISTING in self.planet.tags:
+            logger.warning(f"玩家{self.number}建造失败: 该星系已不存在，无法建造建筑")
+            return False, "该星系已不存在，无法建造建筑"
         new_building = new_building_type()
         new_building.player = self
         self.buildings.append(new_building)
@@ -363,27 +366,28 @@ class Player:
 
         broadcast = broadcast_type()
 
-        if card.cost > self.energy:
-            logger.warning(
-                f"玩家{self.number}回应广播失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
-            )
-            return False, "能量不足"
-        old_energy = self.energy
-        self.energy -= card.cost
-        self.cards.remove(card)
-
         broadcast.player = self
         broadcast.planet = planet
         self.broadcasts.append(broadcast)
         planet.broadcasts.append(broadcast)
 
         broadcast2: Broadcast | None = (
-            self.planet.broadcasts[0] if len(self.planet.broadcasts) > 0 else None
+            planet.broadcasts[0] if len(planet.broadcasts) > 0 else None
         )
         logger.debug(f"broadcasts:{planet.broadcasts}")
         if broadcast2 is None:
             logger.warning(f"玩家{self.number}回应广播失败: 没有可响应的广播")
             return False, "没有可响应的广播"
+        
+        if card.cost > self.energy:
+            logger.warning(
+                f"玩家{self.number}回应广播失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
+            )
+            return False, "能量不足"
+        
+        old_energy = self.energy
+        self.energy -= card.cost
+        self.cards.remove(card)
 
         message = broadcast.respond(broadcast2)
         message2 = broadcast2.respond(broadcast)
@@ -522,6 +526,9 @@ class Player:
         logger.debug(f"玩家{self.number}收到其他操作: 操作类型={operation.Tag}")
         if operation.player == self:
             logger.debug(f"玩家{self.number}跳过自己的操作")
+            return
+        if operation.Tag == Tags.WIN:
+            logger.info(f"玩家{self.number}收到胜利通知: 玩家{operation.player.number}获得胜利")
             return
         if self.connect_ID in function_ID:
             functions = function_ID[self.connect_ID]

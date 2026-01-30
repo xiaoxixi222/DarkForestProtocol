@@ -37,21 +37,26 @@ class Planet:
     def clear_sun(self):
         self.tags.append(Tags.NO_SUN)
         if self.owner is not None:
-            ret = self.owner.destroy_buildings(tags=[Tags.NEED_SUN])
-        return ret
+            ret = self.owner.destroy_buildings(tags=[Tags.NEED_SUN], is_self=False)
+            return ret
+        return []
 
     def clear_buildings(self):
         self.tags.append(Tags.NO_BUILDING)
         if self.owner is not None:
-            ret = self.owner.destroy_buildings(tags=[Tags.ALL])
-        return ret
+            ret = self.owner.destroy_buildings(tags=[Tags.ALL], is_self=False)
+            return ret
+        return []
 
     def clear_existing(self):
         self.tags.append(Tags.NO_EXISTING)
         if self.owner is not None:
-            ret = self.owner.destroy_buildings(tags=[Tags.ALL])
+            ret = self.owner.destroy_buildings(tags=[Tags.ALL], is_self=False)
             self.owner.live = False
-        return ret
+            if self.owner.game is not None:
+                self.owner.game.free_planets.remove(self)
+            return ret
+        return []
 
 
 class PlanetMap:

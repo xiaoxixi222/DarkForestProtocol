@@ -34,6 +34,7 @@ class Game:
             player.number = numbers.pop()
             player.planet = self.free_planets.pop()
             player.game = self
+            player.planet.owner = player
 
         self.players.sort(key=lambda x: x.number)
 
