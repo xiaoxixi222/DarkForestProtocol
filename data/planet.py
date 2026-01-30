@@ -38,20 +38,23 @@ class Planet:
         self.tags.append(Tags.NO_SUN)
         if self.owner is not None:
             ret = self.owner.destroy_buildings(tags=[Tags.NEED_SUN])
-        return ret
+            return ret
+        return []
 
     def clear_buildings(self):
         self.tags.append(Tags.NO_BUILDING)
         if self.owner is not None:
             ret = self.owner.destroy_buildings(tags=[Tags.ALL])
-        return ret
+            return ret
+        return []
 
     def clear_existing(self):
         self.tags.append(Tags.NO_EXISTING)
         if self.owner is not None:
             ret = self.owner.destroy_buildings(tags=[Tags.ALL])
             self.owner.live = False
-        return ret
+            return ret
+        return []
 
 
 class PlanetMap:
