@@ -42,11 +42,11 @@ class ConnectManager:
 
         # 创建 Flask 应用
         self.app = Flask(__name__)
-        # 创建 Socket.IO 服务器，禁用 WebSocket，只使用 HTTP polling
+        # 创建 Socket.IO 服务器，启用 WebSocket 以提供更稳定的连接
         self.sio = socketio_lib.Server(
             cors_allowed_origins="*",
             async_mode="gevent",
-            websocket=False,  # 禁用 WebSocket
+            websocket=True,  # 启用 WebSocket
         )
         # 将 Socket.IO 附加到 Flask 应用
         self.app.wsgi_app = socketio_lib.WSGIApp(self.sio, self.app.wsgi_app)
@@ -82,6 +82,10 @@ class ConnectManager:
             id = self.sid_ID_map.get(sid, None)
             if id is not None:
                 self.preparing_count -= 1
+                # 清理 ID_handler_map 中的 handler
+                if id in self.ID_handler_map:
+                    del self.ID_handler_map[id]
+                    self.refresh_function_map()
             self.sid_ID_map[sid] = None
             self.connect_count -= 1
 
@@ -310,7 +314,10 @@ class Handler:
     def input(self):
         self.receive_event.clear()
         self.sio.emit("input", to=self.sid)
-        self.receive_event.wait()
+        # 添加 60 秒超时保护
+        if not self.receive_event.wait(timeout=60):
+            logger.warning(f"输入超时: {self.ID}")
+            return ""
         logger.info(f"收到消息: {self.receive}")
         return self.receive
 

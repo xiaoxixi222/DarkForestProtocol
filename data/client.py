@@ -44,7 +44,11 @@ class Client:
         import socketio as sio_lib
 
         # 使用 gevent 引擎创建客户端
-        self.sio = sio_lib.Client()
+        self.sio = sio_lib.Client(
+            reconnection=True,  # 启用自动重连
+            reconnection_attempts=5,  # 最大重连次数
+            reconnection_delay=3,  # 重连延迟（秒）
+        )
         self.host = host
         self.port = port
         logger.info(f"正在初始化客户端: {self.host}:{self.port}")
@@ -130,7 +134,7 @@ class Client:
             import traceback
 
             traceback.print_exc()
-            return
+            raise  # 抛出异常以触发自动重连机制
 
 
 if __name__ == "__main__":
