@@ -3,12 +3,18 @@
 import gevent
 import gevent.monkey
 
-gevent.monkey.patch_all()
-
 from data import game, player
 import logging
-import os, time
-import threading
+import os
+import time
+
+# 创建 ThreadPool 用于运行 input()
+from gevent.threadpool import ThreadPool
+
+from data.connect_manager import ConnectManager
+
+gevent.monkey.patch_all()
+
 
 log_format = (
     "%(asctime)s.%(msecs)03d [%(levelname)s] [%(name)s:%(funcName)s] %(message)s"
@@ -33,14 +39,8 @@ def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
 
 
-# 在所有 monkey_patch 完成后才导入 ConnectManager
-from data.connect_manager import ConnectManager, Handler
-
 connect_manager = ConnectManager()
 logger.info(f"子日志{logging.RootLogger.getChildren}")
-
-# 创建 ThreadPool 用于运行 input()
-from gevent.threadpool import ThreadPool
 
 input_pool = ThreadPool(1)
 
@@ -57,7 +57,7 @@ def run_game_logic():
     clear_screen()
     print("欢迎来到黑暗森林!")
 
-    while start == False:
+    while start is False:
         if num_players == -1:
             print("\n请说一下一共几个人 (2-4):")
             try:

@@ -1,11 +1,9 @@
 from typing import Any
 from .setting import Tags
 from .building import Building
-from . import building
+from . import building, attack, broadcast
 from .attack import Attack
-from . import attack
 from .broadcast import Broadcast
-from . import broadcast
 
 
 class Card:
@@ -47,7 +45,8 @@ class OperationCard(Card):
     def __init__(self):
         super().__init__()
 
-    def operate(self, player) -> tuple[Any, ...]: ...
+    def operate(self, player) -> tuple[Any, ...]:
+        return ()
 
 
 # 广播牌

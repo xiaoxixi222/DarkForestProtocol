@@ -378,13 +378,13 @@ class Player:
         if broadcast2 is None:
             logger.warning(f"玩家{self.number}回应广播失败: 没有可响应的广播")
             return False, "没有可响应的广播"
-        
+
         if card.cost > self.energy:
             logger.warning(
                 f"玩家{self.number}回应广播失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
             )
             return False, "能量不足"
-        
+
         old_energy = self.energy
         self.energy -= card.cost
         self.cards.remove(card)
@@ -526,9 +526,6 @@ class Player:
         logger.debug(f"玩家{self.number}收到其他操作: 操作类型={operation.Tag}")
         if operation.player == self:
             logger.debug(f"玩家{self.number}跳过自己的操作")
-            return
-        if operation.Tag == Tags.WIN:
-            logger.info(f"玩家{self.number}收到胜利通知: 玩家{operation.player.number}获得胜利")
             return
         if self.connect_ID in function_ID:
             functions = function_ID[self.connect_ID]

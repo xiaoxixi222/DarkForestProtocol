@@ -35,7 +35,7 @@ class Attack:
             self.player.game.add_operation(
                 Message(Tags.ALLOW_ATTACK, self.player, (self,))
             )
-        
+
         ret = []
 
         if Tags.NO_SUN in self.tags:

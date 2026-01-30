@@ -1,15 +1,12 @@
 import os
 import gevent
 import gevent.monkey
-
-gevent.monkey.patch_all()
-
 from pathlib import Path
-import socketio
-import time
 import logging
 import uuid
 from queue import Queue
+
+gevent.monkey.patch_all()
 
 log_format = (
     "%(asctime)s.%(msecs)03d [%(levelname)s] [%(name)s:%(funcName)s] %(message)s"
