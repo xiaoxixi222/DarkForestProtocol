@@ -366,15 +366,6 @@ class Player:
 
         broadcast = broadcast_type()
 
-        if card.cost > self.energy:
-            logger.warning(
-                f"玩家{self.number}回应广播失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
-            )
-            return False, "能量不足"
-        old_energy = self.energy
-        self.energy -= card.cost
-        self.cards.remove(card)
-
         broadcast.player = self
         broadcast.planet = planet
         self.broadcasts.append(broadcast)
@@ -387,6 +378,16 @@ class Player:
         if broadcast2 is None:
             logger.warning(f"玩家{self.number}回应广播失败: 没有可响应的广播")
             return False, "没有可响应的广播"
+        
+        if card.cost > self.energy:
+            logger.warning(
+                f"玩家{self.number}回应广播失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
+            )
+            return False, "能量不足"
+        
+        old_energy = self.energy
+        self.energy -= card.cost
+        self.cards.remove(card)
 
         message = broadcast.respond(broadcast2)
         message2 = broadcast2.respond(broadcast)
