@@ -397,8 +397,12 @@ def message_to_str(message: Message) -> str:
         planet_info = f"在{broadcast.planet.number}号星球上" if broadcast.planet else ""
         result_desc = f"发出了广播{planet_info}"
     elif message.Tag == Tags.DESTROY and len(message.result) > 0:
-        target = message.result[0]
-        result_desc = f"摧毁了{target.name}"
+        destroyed = message.result[0]
+        if len(destroyed) == 1:
+            result_desc = f"摧毁了{destroyed[0].name}"
+        else:
+            building_names = "、".join(b.name for b in destroyed)
+            result_desc = f"摧毁了{building_names}"
     elif message.Tag == Tags.RESPOND_BROADCAST and len(message.result) >= 4:
         broadcast1 = message.result[0]
         broadcast2 = message.result[1]
