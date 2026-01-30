@@ -40,7 +40,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy data/ --ignore-missing-imports --no-error-summary
+        mypy data/ --namespace-packages --no-error-summary --explicit-package-bases
       continue-on-error: true
 
     - name: Test with pytest
