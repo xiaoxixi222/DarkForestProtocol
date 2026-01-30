@@ -69,9 +69,10 @@ class Attack:
                         )
                         self.player.game.status = "end"
                 return True, ret, "目标玩家被击败"
+            else:
+                return True, ret, "目标星球被摧毁"
         else:
             return False, ret, "防御成功"
-        return False, ret, "攻击未生效"
 
     def refuse_attack(self) -> bool:
         if self.planet is None or self.player is None:
