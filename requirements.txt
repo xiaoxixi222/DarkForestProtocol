@@ -32,9 +32,9 @@ zope.event==6.1
 zope.interface==8.2
 
 # CI/CD dependencies
-flake8==7.1.1
-mypy==1.15.0
-pytest==8.3.4
+flake8==7.3.0
+mypy==1.19.1
+pytest==9.0.2
 pytest-cov==6.0.0
 pytest-html==4.1.1
-types-setuptools==75.8.0.0
+types-setuptools==80.10.0.20260124
