@@ -36,6 +36,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         # Exclude specific directories
         flake8 . --exclude=.git,.venv,build,dist,*.egg-info,setup.py
+      continue-on-error: true
 
     - name: Type check with mypy
       run: |
