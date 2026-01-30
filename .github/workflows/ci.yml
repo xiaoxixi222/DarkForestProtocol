@@ -44,10 +44,24 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest tests/ -v --tb=short
+        pytest tests/ -v --tb=short --html=tests/report.html --self-contained-html
       continue-on-error: true
 
     - name: Test coverage with pytest
       run: |
-        pytest tests/ --cov=data --cov-report=xml --cov-report=term-missing
+        pytest tests/ --cov=data --cov-report=html:cov --cov-report=term-missing
       continue-on-error: true
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: cov/
+        retention-days: 30
+
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: tests/report.html
+        retention-days: 30
