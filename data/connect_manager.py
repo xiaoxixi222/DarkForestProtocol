@@ -417,6 +417,9 @@ def message_to_str(message: Message) -> str:
     elif message.Tag == Tags.DISCARD and len(message.result) > 0:
         card = message.result[0]
         result_desc = f"弃掉了{card.name}"
+    elif message.Tag == Tags.WIN and len(message.result) > 0:
+        winner = message.result[0]
+        result_desc = f"玩家{winner.number}获得胜利！"
     else:
         # 默认处理：将 result 转换为字符串
         result_desc = str(message.result)

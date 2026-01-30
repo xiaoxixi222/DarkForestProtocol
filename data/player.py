@@ -527,6 +527,9 @@ class Player:
         if operation.player == self:
             logger.debug(f"玩家{self.number}跳过自己的操作")
             return
+        if operation.Tag == Tags.WIN:
+            logger.info(f"玩家{self.number}收到胜利通知: 玩家{operation.player.number}获得胜利")
+            return
         if self.connect_ID in function_ID:
             functions = function_ID[self.connect_ID]
         else:
