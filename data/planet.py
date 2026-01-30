@@ -53,6 +53,8 @@ class Planet:
         if self.owner is not None:
             ret = self.owner.destroy_buildings(tags=[Tags.ALL])
             self.owner.live = False
+            if self.owner.game is not None:
+                self.owner.game.free_planets.remove(self)
             return ret
         return []
 

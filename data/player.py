@@ -125,6 +125,9 @@ class Player:
         if Tags.NEED_SUN in card.tags and Tags.NO_SUN in self.planet.tags:
             logger.warning(f"玩家{self.number}建造失败: 该星系无太阳能，无法建造该建筑")
             return False, "该星系无太阳能，无法建造该建筑"
+        if Tags.NO_EXISTING in self.planet.tags:
+            logger.warning(f"玩家{self.number}建造失败: 该星系已不存在，无法建造建筑")
+            return False, "该星系已不存在，无法建造建筑"
         new_building = new_building_type()
         new_building.player = self
         self.buildings.append(new_building)
