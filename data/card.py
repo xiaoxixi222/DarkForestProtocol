@@ -47,7 +47,8 @@ class OperationCard(Card):
     def __init__(self):
         super().__init__()
 
-    def operate(self, player) -> tuple[Any, ...]: ...
+    def operate(self, player) -> tuple[Any, ...]:
+        return ()
 
 
 # 广播牌
