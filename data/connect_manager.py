@@ -1,5 +1,5 @@
 # gevent.monkey.patch_all() 已在 main.py 中调用
-from typing import Any, Literal
+from typing import Any
 from flask import Flask
 import socketio as socketio_lib
 import logging
@@ -8,13 +8,13 @@ from gevent.event import Event
 from data.building import Building
 from data.card import Card
 
-logger = logging.getLogger("game." + __name__)
-logger.setLevel(logging.DEBUG)
-
 from .message import Message
 from .player import Player
 from .attack import Attack
 from .setting import RULE_PATH, COMMANDS
+
+logger = logging.getLogger("game." + __name__)
+logger.setLevel(logging.DEBUG)
 
 
 class ConnectManager:
@@ -49,7 +49,7 @@ class ConnectManager:
             websocket=True,  # 启用 WebSocket
         )
         # 将 Socket.IO 附加到 Flask 应用
-        self.app.wsgi_app = socketio_lib.WSGIApp(self.sio, self.app.wsgi_app)
+        self.app.wsgi_app = socketio_lib.WSGIApp(self.sio, self.app.wsgi_app)  # type:ignore
 
         self.host: str = host
         self.port: int = port  # 转换为整数
@@ -145,10 +145,10 @@ class ConnectManager:
         # 使用 gevent.pywsgi 启动服务器
         from gevent.pywsgi import WSGIServer
 
-        logger.info(f"准备启动 Socket.IO 服务器...")
+        logger.info("准备启动 Socket.IO 服务器...")
         logger.info(f"  Host: {self.host}")
         logger.info(f"  Port: {self.port}")
-        logger.info(f"  Async Mode: gevent")
+        logger.info("  Async Mode: gevent")
         logger.info(f"  App: {self.app}")
         logger.info(f"  SIO: {self.sio}")
         logger.info(f"  WSGI App: {self.app.wsgi_app}")
@@ -157,7 +157,7 @@ class ConnectManager:
         )
 
         logger.info(f"✓ Socket.IO 服务器启动在 {self.host}:{self.port}")
-        logger.info(f"✓ 等待客户端连接...")
+        logger.info("✓ 等待客户端连接...")
 
         try:
             from geventwebsocket.handler import WebSocketHandler
@@ -217,7 +217,7 @@ class Handler:
     def start_round(self, player: Player):
         self.output("开始回合\n请选择行动")
         while True:
-            output = f"当前能源：{player.energy}, {("星系"+str(player.planet.number) if player.planet is not None else '无星系')}, 卡牌："
+            output = f"当前能源：{player.energy}, {("星系" + str(player.planet.number) if player.planet is not None else '无星系')}, 卡牌："
             for i, card in enumerate(player.cards):
                 output += f"{card.name}({card.cost}, {i}号) "
             self.output(output)

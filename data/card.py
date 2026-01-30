@@ -1,11 +1,9 @@
 from typing import Any
 from .setting import Tags
 from .building import Building
-from . import building
+from . import building, attack, broadcast
 from .attack import Attack
-from . import attack
 from .broadcast import Broadcast
-from . import broadcast
 
 
 class Card:
