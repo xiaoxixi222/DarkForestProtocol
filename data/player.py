@@ -53,6 +53,7 @@ class Player:
         self.broadcasts: list[Broadcast] = []
         self.connect_ID: str = ""
         self.memories: list[int] = []
+        self.used_operations: list[type[OperationCard]] = []
         logger.debug(f"玩家初始化完成: 初始能量={self.energy}")
 
     def start_game(self) -> None:
@@ -417,6 +418,12 @@ class Player:
                 f"玩家{self.number}操作失败: 该卡牌不是操作卡 (类型={type(card)})"
             )
             return False, "该卡牌不是操作卡"
+        if Tags.ONLY_ONE in card.tags:
+            if type(card) in self.used_operations:
+                logger.warning(
+                    f"玩家{self.number}操作失败: 该操作卡只能使用一次 (卡牌={card.name})"
+                )
+                return False, "该操作卡只能使用一次"
         if self.energy < card.cost:
             logger.warning(
                 f"玩家{self.number}操作失败: 能量不足 (当前能量={self.energy}, 需要={card.cost})"
@@ -426,6 +433,8 @@ class Player:
         self.energy -= card.cost
         self.cards.remove(card)
         result = card.operate(self)
+        if Tags.ONLY_ONE in card.tags:
+            self.used_operations.append(type(card))
         logger.info(
             f"玩家{self.number}操作成功: 卡牌={card.name}, 能量消耗={card.cost} ({old_energy}->{self.energy}), 结果={result}"
         )
