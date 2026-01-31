@@ -21,6 +21,7 @@ class Tags(Enum):
     DESTROY = auto()
     BROADCAST = auto()
     RESPOND_BROADCAST = auto()
+    END_BROADCAST = auto()
     OPERATE = auto()
     DISCARD = auto()
     WIN = auto()

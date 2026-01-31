@@ -1,6 +1,7 @@
 import logging
 
 from .setting import Tags
+from .message import Message
 
 logger = logging.getLogger("game." + __name__)
 logger.setLevel(logging.DEBUG)
@@ -45,6 +46,17 @@ class Broadcast:
                 return "对方合作，能量+5"
             else:
                 return "双方伪装，合作失败"
+
+    def end(self):
+        if self.planet is None or self.player is None or self.player.game is None:
+            logger.error("广播属性未初始化")
+            assert False, "广播属性未初始化"
+        self.planet.broadcasts.remove(self)
+        self.player.broadcasts.remove(self)
+        self.player.energy += 1
+        self.player.game.add_operation(
+            Message(Tags.END_BROADCAST, player=None, result=(self.player, self))
+        )
 
 
 class StellarBroadcastCooperate(Broadcast):
