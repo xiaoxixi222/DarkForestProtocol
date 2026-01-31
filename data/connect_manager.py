@@ -180,6 +180,7 @@ class ConnectManager:
                 "start_game": handler.start_game,
                 "start_round": handler.start_round,
                 "apply_attack": handler.apply_attack,
+                "need_respond": handler.need_respond,
                 "other_operation": handler.other_operation,
             }
 
@@ -305,6 +306,29 @@ class Handler:
             return False
         else:
             return False
+
+    def need_respond(self, player: Player):
+        if player.planet is None:
+            return False
+        output = "你和星系上拥有了一个广播，你需要回复,请输入用来回复的卡牌的编号,卡牌:"
+        for i, card in enumerate(player.cards):
+            output += f"{card.name}({card.cost}, {i}号) "
+        self.output(output)
+        while True:
+            ret = self.input()
+            if ret.isdigit():
+                card_id = int(ret)
+                if 0 <= card_id < len(player.cards):
+                    ret, doc = player.respond_broadcast(card_id, player.planet.number)
+                    if ret:
+                        self.output(f"回复成功, {doc}")
+                        return True
+                    else:
+                        self.output(f"回复失败: {doc}请重新输入")
+                else:
+                    self.output("输入错误，请重新输入")
+            else:
+                self.output("输入错误，请重新输入")
 
     def other_operation(self, operation: Message):
         self.output(f"收到其他操作: {message_to_str(operation)}")

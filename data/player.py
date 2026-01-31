@@ -11,6 +11,7 @@ function_ID: dict[str, dict[str, Callable]] = {}
 start_game: Callable[[Player], None]
 start_round: Callable[[Player], None]
 apply_attack: Callable[Attack], bool]
+need_respond: Callable[[Player], None]
 other_operation: Callable[[Operation], None]
 """
 id_player: dict[str, "Player"] = {}
@@ -497,7 +498,7 @@ class Player:
             f"玩家{self.number}当前状态: 能量={self.energy}, 卡牌={len(self.cards)}, 建筑={len(self.buildings)}, 攻击={len(self.attacks)}, 广播={len(self.broadcasts)}"
         )
         self.apply_attacks(functions)
-        self.check_broadcasts()
+        self.check_broadcasts(functions)
         if "start_round" in functions and functions["start_round"] is not None:
             functions["start_round"](self)
         else:
@@ -532,7 +533,7 @@ class Player:
                         logger.info(f"玩家{self.number}拒绝攻击: 攻击={attack.name}")
                         attack.refuse_attack()
 
-    def check_broadcasts(self) -> None:
+    def check_broadcasts(self, functions: dict[str, Callable]) -> None:
         logger.debug(f"玩家{self.number}处理广播: 待处理广播数={len(self.broadcasts)}")
         if self.game is None or self.planet is None or self.number == 0:
             logger.warning(f"玩家{self.number}处理广播失败: 玩家属性未初始化")
@@ -544,6 +545,18 @@ class Player:
             if self.game.round - broadcast.round > BROADCAST_EXISTENCE_ROUNDS:
                 logger.info(f"玩家{self.number}丢弃广播: 广播={broadcast.name}")
                 broadcast.end()
+
+        has_broadcast = False
+        for c in self.cards:
+            if isinstance(c, BroadcastCard) and c.cost <= self.energy:
+                has_broadcast = True
+                break
+        if len(self.planet.broadcasts) and has_broadcast:
+            logger.debug(f"玩家{self.number}有广播卡可使用")
+            if functions.get("need_respond") is not None:
+                functions["need_respond"](self)
+            else:
+                logger.warning("玩家无need_respond函数")
 
     def other_operation(self, operation: "Message") -> None:
         logger.debug(f"玩家{self.number}收到其他操作: 操作类型={operation.Tag}")
