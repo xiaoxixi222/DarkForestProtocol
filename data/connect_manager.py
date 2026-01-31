@@ -49,7 +49,9 @@ class ConnectManager:
             websocket=True,  # 启用 WebSocket
         )
         # 将 Socket.IO 附加到 Flask 应用
-        self.app.wsgi_app = socketio_lib.WSGIApp(self.sio, self.app.wsgi_app)  # type:ignore
+        self.app.wsgi_app = socketio_lib.WSGIApp(  # type:ignore
+            self.sio, self.app.wsgi_app
+        )
 
         self.host: str = host
         self.port: int = port  # 转换为整数
@@ -410,6 +412,12 @@ def message_to_str(message: Message) -> str:
         message2 = message.result[3]
         planet_info = f"在{broadcast2.planet.number}号星球" if broadcast2.planet else ""
         result_desc = f"使用{broadcast1.name}{planet_info}回应{broadcast2.name}: {message1}, 对方回应: {message2}"
+    elif message.Tag == Tags.END_BROADCAST and len(message.result) >= 2:
+        player = message.result[0]
+        broadcast = message.result[1]
+        player_info = f"玩家{player.number}的"
+        planet_info = f"在{broadcast.planet.number}号星球" if broadcast.planet else ""
+        result_desc = f"结束了{player_info}广播{broadcast.name}{planet_info}"
     elif message.Tag == Tags.OPERATE and len(message.result) >= 2:
         card = message.result[0]
         result_str = message.result[1]
