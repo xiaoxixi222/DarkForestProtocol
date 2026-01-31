@@ -1,9 +1,14 @@
 from typing import Any
+import logging
 from .setting import Tags
 from .building import Building
 from . import building, attack, broadcast
 from .attack import Attack
 from .broadcast import Broadcast
+from .player import Player
+
+logger = logging.getLogger("game." + __name__)
+logger.setLevel(logging.DEBUG)
 
 
 class Card:
@@ -372,6 +377,28 @@ class LightSpeedShip(OperationCard):
         self.cost = 10
         self.defense_level = 0
         self.tags = (Tags.ONLY_ONE,)
+
+    def operate(self, player: "Player") -> tuple[Any, ...]:
+        game = player.game
+        if game is None:
+            logger.error(f"Player {player.number} has no game")
+            assert False, f"Player {player.number} has no game"
+        old_planet = player.planet
+        new_planet = game.free_planets.pop()
+        player.buildings.clear()
+        player.energy = 0
+        player.planet = new_planet
+        if old_planet is not None:
+            old_planet.owner = None
+            old_planet.refresh()
+            game.free_planets.append(old_planet)
+        new_planet.owner = player
+        new_planet.refresh()
+        from_log = f"from {old_planet.number}" if old_planet is not None else ""
+        logger.info(
+            f"Player {player.number} has moved {from_log} to {new_planet.number}"
+        )
+        return ()
 
 
 def get_all_card_classes():
